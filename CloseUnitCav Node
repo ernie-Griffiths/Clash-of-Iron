@@ -1,0 +1,41 @@
+CloseUnitCav
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using AI.Eyes;
+using Units;
+
+public class CloseUnitCavNode : Node
+{
+    private string Name;
+    private Transform target;
+    private GameObject Unit;
+    public CloseUnitCavNode(GameObject Unit)
+    {
+        this.Unit = Unit;
+    }
+
+    public override NodeState Evaluate()
+    {
+        // checks the closet unit is a cavalry unit.
+        Debug.Log("Close Unit Cav Node");
+        GameObject AIEyesGO = GameObject.Find("AI Brain");
+        AIEYES AIeyes = (AIEYES)AIEyesGO.GetComponent(typeof(AIEYES));
+        target = AIeyes.GetClosestPlayerUnit(Unit.transform);
+
+        Name = target.GetComponent<Unit_Script>().unitName;
+
+        // if the unit is cavalry returns a failure, this is because more often than not it will 
+        Debug.Log("close unit name = " + Name);
+        if (Name == "cavalry")
+        {
+            Debug.Log("Close Unit Cav node Failure");
+            return NodeState.Failure;
+            
+        }
+        else
+            Debug.Log("Close Unit Cav node success");
+        return NodeState.Success;
+
+    }
+}
