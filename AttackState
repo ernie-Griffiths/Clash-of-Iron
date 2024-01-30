@@ -1,0 +1,67 @@
+AttackState
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+using Brain;
+using AI.Eyes;
+
+namespace Assets.Scripts.FSM.States
+{
+
+    [CreateAssetMenu (fileName = "AttackState", menuName = "FSM/States/Attack", order = 2)]
+    public class AttackState : AbstractFSMState
+    {
+        public override void OnEnable()
+        {
+            base.OnEnable();
+            StateType = FSMStateType.ATTACK;
+        }
+
+        public override bool EnterState()
+        {
+            EnteredState = false;
+            if (base.EnterState())
+            {
+                // start function of entered state.
+                Debug.Log("Attack State entered.");
+            EnteredState = true;
+            }
+            return EnteredState;
+        }
+
+
+        public override void UpdateState()
+        {
+            // need to make sure we have entered the state
+
+            if (EnteredState)
+            {
+                Debug.Log("in attack state");
+                // this is where stuff needs to happen.
+
+                // running the attack tree and then Analysing the armies.
+                    Debug.Log("Running attack tree");
+                    GameObject AIBrainATs = GameObject.Find("AI Brain");
+                    AISBrain AIBrain = (AISBrain)AIBrainATs.GetComponent(typeof(AISBrain));
+                    AIBrain.RunAttackTree();
+                    AIBrain.AnalyseArmies();
+                //once it has done this it will then enter the decision state
+                _fsm.EnterState(FSMStateType.DECISION);
+               
+            }
+            
+        }
+        public override bool ExitState()
+        {
+        // when the state is exited it runs this.
+            base.ExitState();
+
+            Debug.Log("Exiting Attack state");
+            return true;
+        }
+    }
+}
