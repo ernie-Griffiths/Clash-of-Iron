@@ -1,0 +1,66 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.AI;
+using UnityEngine;
+using player;
+using AI.Eyes;
+public class MoveUnitBehindNode : Node
+{
+
+    private Transform target;
+    private GameObject Unit;
+    private NavMeshAgent agent;
+    private float range;
+
+    public MoveUnitBehindNode(GameObject Unit, float range)
+    {
+        this.Unit = Unit;
+        this.range = range;
+    }
+
+
+    public override NodeState Evaluate()
+    {
+        // grabs the closets unit using AI EYES.
+        GameObject AIEyesGO = GameObject.Find("AI Brain");
+        AIEYES AIeyes = (AIEYES)AIEyesGO.GetComponent(typeof(AIEYES));
+        target = AIeyes.GetClosestPlayerUnit(Unit.transform);
+
+        if (agent = null)
+        {
+            Debug.Log("Move to Unit node failure");
+            return NodeState.Failure;
+        }
+        // grabs the navmesh of this unit.
+        agent = Unit.GetComponent<NavMeshAgent>();
+
+        // sets the location of the closest unit to a vector three.
+        Vector3 newDestination = target.transform.position;
+
+        //Vector3 sideDestination = newDestination + (Vector3.left * range);
+        Vector3 backDestination = newDestination + (Vector3.back * range);
+
+        playerUnit Units = Unit.gameObject.GetComponent<playerUnit>();
+
+        
+            // moves the unit to the new destination
+            agent.isStopped = false;
+           // Units.GetComponent<NavMeshAgent>().radius = 10;
+            Units.MoveUnit(backDestination);
+            Debug.Log("Move behind Unit Node Running");
+          
+            if (Unit.transform.position == backDestination)
+            {
+                //once the Enemy has stoped the node returns success.
+                Debug.Log("Move behind Unit Node success");
+                agent.isStopped = true;
+                return NodeState.Success;
+            }
+            else return NodeState.Running;
+       
+
+    }
+
+
+}
+
