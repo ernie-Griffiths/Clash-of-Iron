@@ -1,0 +1,169 @@
+
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using player;
+
+namespace InputManager
+{
+    public class InputHandler : MonoBehaviour
+    {
+        public static InputHandler instanse;
+
+        private RaycastHit hit; // what we hit with our raycast.
+
+        private List<Transform> selectedUnits = new List<Transform>();
+
+        private bool isDragging = false;
+
+        private Vector3 mousePos;
+
+        void Start()
+        {
+            instanse = this;
+        }
+
+        private void OnGUI()
+        {
+            // drawing the rectangle. for unit selection.
+            if (isDragging)
+            {
+                Rect rect = MultiSelect.GetScreenRect(mousePos, Input.mousePosition);
+                MultiSelect.DrawScreenRect(rect, new Color(50f, 140f, 40f, 0.25f));
+                MultiSelect.DrawScreenRectBorder(rect, 3, Color.blue);
+            }
+        }
+
+        public void HandleUnitMovement()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                mousePos = Input.mousePosition;
+
+                // create a ray
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                //check if we hitsomthing
+                if (Physics.Raycast(ray, out hit))
+                {
+                    // checking the layer hit player units are set to a certain layer
+                    LayerMask layerHit = hit.transform.gameObject.layer;
+
+                    switch (layerHit.value)
+                    {
+                        case 9:
+                            SelectUnit(hit.transform, Input.GetKey(KeyCode.LeftShift));
+                            break;
+                        default:
+                            isDragging = true;
+                            DeselectUnits();
+                            break;
+                    }
+                }
+            }
+
+
+            // this selects the units within the bounds of the selection rectangle
+            if (Input.GetMouseButtonUp(0))
+            {
+                foreach (Transform child in player.PlayerManager.instance.PlayerUnits)
+                {
+                    Debug.Log("this is going on");
+                    foreach (Transform unit in child)
+                    {
+                        // checking if units are within the selection bounds.
+                        if (isWithinSelectionBounds(unit))
+                        {
+                            SelectUnit(unit, true);
+                        }
+                    }
+                }
+                isDragging = false;
+            }
+
+            if (Input.GetMouseButtonDown(1) && HaveSelectedUnits())
+            {
+                // create a ray
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                //check if we hitsomthing
+                if (Physics.Raycast(ray, out hit))
+                {
+                    // do somthing witht the data.
+                    LayerMask layerHit = hit.transform.gameObject.layer;
+
+                    switch (layerHit.value)
+                    {
+                        case 9:
+
+                            break;
+                        case 10: // enemy unit
+                                 // attack or set target.
+                        default:
+                            foreach (Transform unit in selectedUnits)
+                            {
+                                if( unit == null)
+                                {
+                                    break;
+                                }
+                                playerUnit pU = unit.gameObject.GetComponent<playerUnit>();
+                                pU.MoveUnit(hit.point); 
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+
+        // this selects the units.
+        private void SelectUnit(Transform unit, bool CanMultiSelect = false)
+        {
+            if (!CanMultiSelect)
+            {
+                DeselectUnits();
+            }
+            // adds the selected unit to the list of selected units, as well as sets the indicator on(that being a small blue circle)
+            selectedUnits.Add(unit);
+            unit.Find("HighLight").gameObject.SetActive(true);
+        }
+
+        // deselects the units so that is wont constantly add to a selection  pool
+        private void DeselectUnits()
+        {
+            for (int i = 0; i < selectedUnits.Count; i++)
+            {
+                if (selectedUnits[i] != null)
+                {
+                    // this turns off the highlight indicator for each of the units.
+                    selectedUnits[i].Find("HighLight").gameObject.SetActive(false);
+                }
+            }
+            selectedUnits.Clear();
+        }
+
+        // the function that checks wether or not a unit is within the selection bounds.
+        private bool isWithinSelectionBounds(Transform tf)
+        {
+            if (!isDragging)
+            {
+                return false;
+            }
+            // checking the rectangle drawn agains the camera position to make sure the point of veiw is correct.
+            Camera cam = Camera.main;
+            Bounds vpBounds = MultiSelect.GetVPBounds(cam, mousePos, Input.mousePosition);
+            return vpBounds.Contains(cam.WorldToViewportPoint(tf.position));
+        }
+
+        // checks if untis have been selected.
+        private bool HaveSelectedUnits()
+        {
+            if (selectedUnits.Count > 0)
+            {
+                return true;
+            } else
+            {
+                return false;
+            }
+        }  
+    }
+}
+
