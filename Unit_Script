@@ -1,0 +1,129 @@
+Unit_Script
+
+using AI.Eyes;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Units
+{
+    // this script manages the data of eahc of the individual units. this is where the stats of each game object can be brought from.
+    public class Unit_Script : MonoBehaviour
+    {
+        private Transform target;
+        private GameObject EnemyUnit;
+        private GameObject thisUnit;
+        public GameObject floatingtextprefab;
+
+    
+        float _TotalDuration;
+
+        // creating unit types.
+        public enum unitType
+        {
+            swordsman,
+            spearman,
+            cavalry,
+            archer
+
+        }
+
+        /// <summary>
+       
+        /// these are all the unit stats that each of the unit can have.
+     
+        [Space(15)]
+        [Header("Unit Settings")]
+        //determining if the unit is player controlled or Enemy Ai controlled
+    
+        public bool isNotBraced;
+        public bool IsPlayerUnit;
+
+        public unitType type;
+
+        public string unitName;
+
+        // all of the unit stats that can be drawn from.
+        [Space(15)]
+        [Header("Unit Base Stats")]
+        [Space(40)]
+        public int cost;
+        public int attack;
+        public float engagerange;
+        public float attackrange;
+        public int health;
+        public int armour;
+        float _AttackDuration = 2.05f;
+
+        /// </summary>
+
+        // the two functions below display the names of each type of unit above the objects.
+        public void Start()
+        {
+            isNotBraced = true;
+            if (floatingtextprefab)
+            {
+                ShowFloatingText();
+            }
+            thisUnit = this.gameObject;
+        }
+        // creates a floating text mesh
+        private void ShowFloatingText()
+        {
+            var go = Instantiate(floatingtextprefab,transform.position, Quaternion.Euler(60, 0, 0), transform);
+            // setting the name above to the units name.
+            go.GetComponent<TextMesh>().text = unitName;
+        }
+
+        public void Update()
+        {
+            if (thisUnit != null)
+            {
+                // finds the closest enemy to the player unit.
+                _TotalDuration += Time.deltaTime;
+                GameObject AIEyesGO = GameObject.Find("AI Brain");
+                AIEYES AIeyes = (AIEYES)AIEyesGO.GetComponent(typeof(AIEYES));
+                target = AIeyes.GetClosestAIUnit(thisUnit.transform);
+                if (target != null)
+                {
+
+
+                    EnemyUnit = target.transform.gameObject;
+                    // checks the distance vs the attack range, if it is under then it starts the deal damage function
+                    float distance = Vector3.Distance(thisUnit.transform.position, EnemyUnit.transform.position);
+                    // check if the unit is a player unit or not.
+                    if (IsPlayerUnit)
+                    {
+                        //Debug.Log("total duraton " + _TotalDuration + "> attack Duration " + _AttackDuration);
+                        //   Debug.Log("distance is " + distance + "attack range is " + attackrange);
+
+                        // has an amount of time that the unit can attack within, as well as the range, to ensure that the player units are only attacking units at a certain interval and range.
+                        if (_TotalDuration > _AttackDuration && distance < attackrange)
+                        {
+                            Debug.DrawLine(transform.position, EnemyUnit.transform.position, Color.red, 1f);
+                            Debug.Log(unitName + " is dealing " + attack + " damage ");
+                            Debug.Log("distance is " + distance + "attack range is " + attackrange);
+                            dealDamage();
+                            _TotalDuration = 0;
+                        }
+                    }
+
+                    if (health <= 0)
+                    {
+                        Destroy(gameObject);
+                    }
+                }
+            }
+        }
+
+        public void dealDamage() { 
+        // this grabs the objects closets to it which should be near to next to it so because of the move to unit node
+     
+                
+                // deals damage to the unit based on the amount of damage that the unit can do and the other units armour.
+                EnemyUnit.GetComponent<Unit_Script>().health = EnemyUnit.GetComponent<Unit_Script>().health - (attack - EnemyUnit.GetComponent<Unit_Script>().armour);
+
+        }  
+    }
+}
