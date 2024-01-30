@@ -1,0 +1,86 @@
+DecisionState
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+using Brain;
+
+namespace Assets.Scripts.FSM.States
+{
+    [CreateAssetMenu(fileName = "DecisionState", menuName = "FSM/States/Decision", order = 1)]
+    //creation of an idle state that reads of that the object is in idle.
+    public class DecisionState : AbstractFSMState
+    {
+        [SerializeField]
+        float _IdleDuration = 1f;
+
+        float _TotalDuration;
+        
+        public override void OnEnable()
+        {
+            base.OnEnable();
+            StateType = FSMStateType.DECISION;
+        }
+
+        public override bool EnterState()
+        {
+            EnteredState = base.EnterState();
+
+            if (EnteredState) { 
+
+                Debug.Log("Entered Decision State");
+                _TotalDuration = 0f;
+                Debug.Log("Analysing battlefield");
+                GameObject AIBrainGO = GameObject.Find("AI Brain");
+                AISBrain AIBrain = (AISBrain)AIBrainGO.GetComponent(typeof(AISBrain));
+                AIBrain.AnalyseArmies();
+            }
+            return EnteredState;
+        }
+
+     
+        public override void UpdateState()
+        {
+          // this checks against the values of each of the armies and then Decides which state it should enter.
+            if (EnteredState)
+            {
+                _TotalDuration += Time.deltaTime;
+              
+
+                if (_TotalDuration > _IdleDuration)
+                {
+                // if the enemy value is equal or greater then it moves into the attack state.
+                    if (Brain.AISBrain.instanse.PlayerArmyValue <= Brain.AISBrain.instanse.EnemyArmyValue)
+                    {
+                        _fsm.EnterState(FSMStateType.ATTACK);
+                    }
+                    // if the player army value is greater than the enemy value it moves onto deciding whether or not to attack or retreat.
+                    else if(Brain.AISBrain.instanse.PlayerArmyValue > Brain.AISBrain.instanse.EnemyArmyValue)
+                    {
+                        // if the player army is greater than the enemy army by half than it will move into the retreat state. otherwise it will move into the defend state.
+                        if (Brain.AISBrain.instanse.PlayerArmyValue >= (Brain.AISBrain.instanse.EnemyArmyValue) * 1.5f)
+                        {
+
+                            _fsm.EnterState(FSMStateType.RETREAT);
+                        }
+                        else { 
+                        _fsm.EnterState(FSMStateType.DEFEND);
+                        }
+                    }
+                }
+            }
+            
+        }
+
+        public override bool ExitState()
+        {
+            base.ExitState();
+
+            Debug.Log("Exiting Decision state");
+            return true;
+        }
+    }
+}
