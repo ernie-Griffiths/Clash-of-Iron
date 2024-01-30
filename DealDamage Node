@@ -1,0 +1,52 @@
+
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using AI.Eyes;
+using Units;
+public class DealDamageNode : Node
+{
+   
+    private GameObject Unit;
+    private Transform target;
+    private GameObject EnemyUnit;
+    int Damage;
+    float range;
+    public DealDamageNode(int Damage, GameObject Unit , float range)
+    {
+        this.Unit = Unit;
+        this.Damage = Damage;
+        this.range = range;
+    }
+
+
+    public override NodeState Evaluate()
+    {
+
+        // this grabs the objects closets to it which should be near to next to it so because of the move to unit node
+        GameObject AIEyesGO = GameObject.Find("AI Brain");
+        AIEYES AIeyes = (AIEYES)AIEyesGO.GetComponent(typeof(AIEYES));
+        target = AIeyes.GetClosestPlayerUnit(Unit.transform);
+      
+        EnemyUnit = target.transform.gameObject;
+
+        float distance = Vector3.Distance(Unit.transform.position, EnemyUnit.transform.position);
+
+        // checks the distance if the distance is Greater than it will Return a failure and damage wont be dealt.
+        if (distance > range)
+        {
+            Debug.Log("Deal damgae node failure");
+            return NodeState.Failure;
+        }
+        else
+        {
+           
+            Debug.DrawLine(Unit.transform.position, EnemyUnit.transform.position, Color.blue , 1f);
+            // deals damage to the unit based on the amount of damage that the unit can do and the other units armour.
+            EnemyUnit.GetComponent<Unit_Script>().health = EnemyUnit.GetComponent<Unit_Script>().health - (Damage - EnemyUnit.GetComponent<Unit_Script>().armour) ;
+            Debug.Log("Deal Damage node success");
+            return NodeState.Success;
+        }
+    }
+}
