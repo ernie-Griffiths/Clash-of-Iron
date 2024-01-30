@@ -1,0 +1,212 @@
+AI Script Brain
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+using AI.Eyes;
+using Units;
+using player;
+
+namespace Brain
+{
+    public class AISBrain : MonoBehaviour
+    {
+        public static AISBrain instanse;
+        // values for the totals of each of the armies.
+        public int PlayerArmyValue;
+        public int EnemyArmyValue;
+        private NavMeshAgent agent;
+
+        private Node AttackTopNode;
+
+        private Node DefendTopNode;
+
+        private Node RetreatTopNode;
+        void Start()
+        {
+            instanse = this;
+          
+
+        }
+
+        //combines the two functions of analysing armies for use publicly
+        public void AnalyseArmies()
+        {
+            ResetArmyCache();
+            AddUPUnits();
+        }
+
+        private void ResetArmyCache()
+        {
+            // clears the army Value and the all of the lists, when the list and value has been cleared it then calls for the Eyes to Re fill each of the lists.
+            GameObject AIEyesGO = GameObject.Find("AI Brain");
+            AIEYES AIeyes = (AIEYES)AIEyesGO.GetComponent(typeof(AIEYES));
+            AIeyes.ClearArmyList();
+            PlayerArmyValue = 0;
+            EnemyArmyValue = 0;
+            Debug.Log("Army Cache Cleared");
+            AIeyes.FindUnits();
+
+        }
+
+        private void AddUPUnits()
+        {
+            // moving through each list that is provided by the AI eyes.
+            // for each of the units within the list, if finds the cost, and totals it up for a player army total and enemy army total for comparison.
+            foreach (GameObject PUnit in AI.Eyes.AIEYES.instanse.PlayerArmy)
+            {
+                int addingcost;
+                addingcost = PUnit.GetComponent<Unit_Script>().cost;
+                PlayerArmyValue += addingcost;
+             //   Debug.Log("PLayer army value is " + PlayerArmyValue);
+            }
+            foreach (GameObject EUnit in AI.Eyes.AIEYES.instanse.EnemyArmy)
+            {
+                int addingcost;
+                addingcost = EUnit.GetComponent<Unit_Script>().cost;
+                EnemyArmyValue += addingcost;
+              //  Debug.Log("My army value is " + EnemyArmyValue);
+            }
+            Debug.Log("Army Counted");
+        }
+
+
+        /// <summary>
+        ///  when deciding on the location of each of the decision trees, this was made in the AI Brain script. 
+        ///  as this Script is designed as the thinking section of the brain, where its decisions would be kept.
+        ///  the design template for each of the trees is located within the development section of the report.
+        /// </summary>
+        
+        public void RunAttackTree()
+        {
+            // AnalyseArmies before running any tree so that the lists would be accurate to the time of instansiation.
+            AnalyseArmies();
+            // it will run the attack tree for each of the units in its Army, looking at values and distances of each of its units before choosing a route.
+            foreach (GameObject Unit in AI.Eyes.AIEYES.instanse.EnemyArmy)
+            {
+
+                Debug.Log("The game object is " + Unit);
+                
+
+                // creating instances of the nodes passing the desired values to each node.
+                CheckEngageRangeNode checkengageRangeNode = new CheckEngageRangeNode(Unit.GetComponent<Unit_Script>().engagerange, Unit.transform);
+                MarchForwardNode marchForwardNode = new MarchForwardNode(Unit.transform, Unit);
+                DealDamageNode dealDamageNode = new DealDamageNode(Unit.GetComponent<Unit_Script>().attack, Unit, Unit.GetComponent<Unit_Script>().attackrange);
+                MoveToUnitNode moveToUnitNode = new MoveToUnitNode(Unit, Unit.GetComponent<Unit_Script>().attackrange);
+                ThisUnitCavNode thisUnitCavNode = new ThisUnitCavNode(Unit.GetComponent<Unit_Script>().unitName);
+                CloseUnitCavNode closeUnitCavNode = new CloseUnitCavNode(Unit);
+                IsUnitBehindNode unitBehindNode = new IsUnitBehindNode(Unit);
+                MoveUnitBehindNode moveUnitBehindNode = new MoveUnitBehindNode(Unit, Unit.GetComponent<Unit_Script>().engagerange - 2);
+
+
+                // creating inverter nodes that pass a node from the list above to invert the result.
+                Inverter CheckEngageRangeNodeInverted = new Inverter(checkengageRangeNode);
+                Inverter IsUnitBehindNodeInverted = new Inverter(unitBehindNode);
+
+                // creation of the Tree is create from the bottom up.
+                Sequence EngageSequence = new Sequence(new List<Node> { moveToUnitNode, dealDamageNode });
+
+                Sequence EncircleSequence = new Sequence(new List<Node> { IsUnitBehindNodeInverted, moveUnitBehindNode });
+
+                Sequence CheckFotCavBattleSequence = new Sequence(new List<Node> { thisUnitCavNode, closeUnitCavNode });
+
+                Sequence attackSequence = new Sequence(new List<Node> { CheckEngageRangeNodeInverted, EngageSequence });
+
+
+                Sequence AdvanceSequence = new Sequence(new List<Node> { checkengageRangeNode, marchForwardNode });
+
+                Sequence FlankSequence = new Sequence(new List<Node> { CheckFotCavBattleSequence, EncircleSequence, CheckEngageRangeNodeInverted });
+
+                AttackTopNode = new Selector(new List<Node> { AdvanceSequence, FlankSequence, attackSequence });
+                // evaluating the top node to run throught the tree.
+                AttackTopNode.Evaluate();
+            }
+        }
+
+        public void RunDefendTree()
+        {
+            // these values are used to set the distances between each of the units in its army.
+            float Flspacing = 0;
+
+            float Aspacing = 0;
+            float Cspacing = 0;
+            // AnalyseArmies before running any tree so that the lists would be accurate to the time of instansiation.
+            AnalyseArmies();
+            // it will run the Defend tree for each of the units in its Army, looking at values and distances of each of its units before choosing a route.
+            foreach (GameObject Unit in AI.Eyes.AIEYES.instanse.EnemyArmy)
+            {
+
+                Debug.Log("The game object is " + Unit);
+
+                // creating instances of the nodes passing the desired values to each node.
+                CheckEngageRangeNode checkengageRangeNode = new CheckEngageRangeNode(Unit.GetComponent<Unit_Script>().engagerange, Unit.transform);
+                BraceNode bracenode = new BraceNode(Unit, Flspacing,Aspacing,Cspacing);
+                DealDamageNode dealDamageNode = new DealDamageNode(Unit.GetComponent<Unit_Script>().attack, Unit, Unit.GetComponent<Unit_Script>().attackrange);
+                MoveToUnitNode moveToUnitNode = new MoveToUnitNode(Unit, Unit.GetComponent<Unit_Script>().attackrange);
+
+                // creating inverter nodes that pass a node from the list above to invert the result.
+                Inverter CheckEngageRangeNodeInverted = new Inverter(checkengageRangeNode);
+
+                // creation of the Tree is create from the bottom up.
+                Sequence EngageSequence = new Sequence(new List<Node> { moveToUnitNode, dealDamageNode });
+
+                Sequence attackSequence = new Sequence(new List<Node> { CheckEngageRangeNodeInverted, EngageSequence });
+
+                Sequence HoldSequence = new Sequence(new List<Node> { checkengageRangeNode, bracenode });
+
+                DefendTopNode = new Selector(new List<Node> { HoldSequence, attackSequence });
+                // evaluating the top node to run throught the tree.
+                DefendTopNode.Evaluate();
+
+                // adding to the spacing of each of the lines if the unit type is the same as the spacing type.
+                switch (Unit.GetComponent<Unit_Script>().unitName)
+                {
+                    case "swordsman": // is swordsman
+                        Flspacing++;
+                        break;
+                    case "spearman": // is spearman
+                        Flspacing++;
+                        break;
+                    case "archer": // is archer
+                        Aspacing++;
+                        break;
+                    case "cavalry": // is cavalry
+                        Cspacing++;
+                        break;
+                    case null:
+                        Debug.Log("none of the above");
+                        break;
+                }
+               
+            }
+
+        }
+        public void RunRetreatTree()
+        {
+            // AnalyseArmies before running any tree so that the lists would be accurate to the time of instansiation.
+            AnalyseArmies();
+            // it will run the Retreat tree for each of the units in its Army, looking at values and distances of each of its units before choosing a route.
+            foreach (GameObject Unit in AI.Eyes.AIEYES.instanse.EnemyArmy)
+            {
+                Debug.Log("The game object is " + Unit);
+
+                // creating instances of the nodes passing the desired values to each node.
+                OutNumberNode outNumberNode = new OutNumberNode(Unit);
+                DealDamageNode dealDamageNode = new DealDamageNode(Unit.GetComponent<Unit_Script>().attack, Unit, Unit.GetComponent<Unit_Script>().attackrange);
+                MoveToUnitNode moveToUnitNode = new MoveToUnitNode(Unit, Unit.GetComponent<Unit_Script>().attackrange);
+                RetreatNode RetreatNode = new RetreatNode(Unit.transform, Unit);
+
+                // creation of the Tree is create from the bottom up.
+                Sequence EngageSequence = new Sequence(new List<Node> { moveToUnitNode, dealDamageNode });
+
+                Sequence OpertuneAttackSequence = new Sequence(new List<Node> {outNumberNode, EngageSequence });
+
+                RetreatTopNode = new Selector(new List<Node> { OpertuneAttackSequence , RetreatNode });
+                // evaluating the top node to run throught the tree.
+                RetreatTopNode.Evaluate();
+            }
+
+        }
+
+    }
+}
