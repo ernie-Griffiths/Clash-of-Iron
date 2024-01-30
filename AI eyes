@@ -1,0 +1,106 @@
+AI eyes
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using player;
+
+namespace AI.Eyes
+{
+
+
+    public class AIEYES : MonoBehaviour
+    {
+        public static AIEYES instanse;
+        [SerializeField]
+        public List<GameObject> PlayerArmy;
+        [SerializeField]
+        public List<GameObject> EnemyArmy;
+
+        public List<Transform> playerenemies;
+        public List<Transform> AIenemies;
+        int i;
+
+        void Start()
+        {
+            instanse = this;
+  
+        }
+
+
+        public void ClearArmyList()
+        //this clears all the lists, so that every analytical cycle is made with a new set of lists. removing Instansitate Errors when trying to find an object that has been destroyed.
+        {
+            PlayerArmy = new List<GameObject>();
+            EnemyArmy = new List<GameObject>();
+            playerenemies = new List<Transform>();
+            AIenemies = new List<Transform>();
+        }
+
+        // this allows the AI to catalog each of the units on the battlefield and separate them into both armies.
+        public void FindUnits()
+        {
+            // finding each of the units in a child of player units and adding their transforms and gameobjects into lists
+            foreach (Transform child in player.PlayerManager.instance.PlayerUnits)
+            {
+                foreach (Transform unit in child)
+                {
+                    i++;
+                 //   Debug.Log("Transform is " + unit + i);
+                    PlayerArmy.Add(unit.transform.gameObject);
+                    playerenemies.Add(unit.transform);
+                }
+            }
+            // finding each of the units in a child of Enemy Units and adding their transforms and gameobjects into lists
+            foreach (Transform child in player.PlayerManager.instance.EnemyUnits)
+            {
+             
+                EnemyArmy.Add(child.transform.gameObject);
+                AIenemies.Add(child.transform);
+
+            }
+            Debug.Log("Army Recalculated");
+        }
+
+        // this function sorts through the list of player Units and finds the closes player unit from a unit
+        public Transform GetClosestPlayerUnit(Transform fromThis)
+        {
+
+            Transform bestTarget = null;
+            float closestDistanceSqr = Mathf.Infinity;
+            Vector3 currentPosition = fromThis.position;
+            foreach (Transform potentialTarget in playerenemies)
+            {
+                Vector3 directionToTarget = potentialTarget.position - currentPosition;
+                float dSqrToTarget = directionToTarget.sqrMagnitude;
+                if (dSqrToTarget < closestDistanceSqr)
+                {
+                    closestDistanceSqr = dSqrToTarget;
+                    bestTarget = potentialTarget;
+                }
+            }
+          
+            return bestTarget;
+        }
+        // Similar to the last function however this finds from a list of AI units rather than player units.
+        public Transform GetClosestAIUnit(Transform fromThis)
+        {
+
+            Transform bestTarget = null;
+            float closestDistanceSqr = Mathf.Infinity;
+            Vector3 currentPosition = fromThis.position;
+            foreach (Transform potentialTarget in AIenemies)
+            {
+                if (potentialTarget == null) return bestTarget;
+                Vector3 directionToTarget = potentialTarget.position - currentPosition;
+                float dSqrToTarget = directionToTarget.sqrMagnitude;
+                if (dSqrToTarget < closestDistanceSqr)
+                {
+                    closestDistanceSqr = dSqrToTarget;
+                    bestTarget = potentialTarget;
+                }
+            }
+          
+            return bestTarget;
+        }
+    }
+}
