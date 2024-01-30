@@ -1,0 +1,59 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.AI;
+using UnityEngine;
+using player;
+public class MarchForwardNode : Node
+{
+    private Transform target;
+    private GameObject Unit;
+    private NavMeshAgent agent;
+   
+    public MarchForwardNode(Transform target,GameObject Unit)
+    {
+
+        this.Unit = Unit;
+        this.target = target;
+    }
+
+
+    public override NodeState Evaluate()
+    {
+       // checks if the unit is null to read of a failure.
+        if(agent = null){
+            Debug.Log("March forward node failure");
+            return NodeState.Failure;
+        }
+
+        // grabs the navmesh component of the unit. to allow for checking if the unit is stopped.
+        agent = Unit.GetComponent<NavMeshAgent>();
+
+        Debug.Log("March forward node start");
+        Vector3 newDestination = target.transform.position;
+        newDestination = newDestination + (Vector3.back * 5f);
+
+
+        Vector3 CurrentDestination = Unit.transform.position;
+
+    
+        float distance = Vector3.Distance(newDestination, CurrentDestination);
+
+
+        playerUnit Units = Unit.gameObject.GetComponent<playerUnit>();
+
+        // checks if the unit is near its destination if it is then it moves towards.
+        if (distance > 1f)
+        {
+      
+            agent.isStopped = false;
+            Units.MoveUnit(newDestination);
+            Debug.Log("MarchForwardRunning");
+                return NodeState.Running;
+        }
+        //once the Enemy has stoped the node returns success.
+        agent.isStopped = true;
+        return NodeState.Success;
+        
+    }
+}
