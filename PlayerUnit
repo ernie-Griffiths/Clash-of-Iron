@@ -1,0 +1,30 @@
+PlayerUnit
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.AI;
+
+namespace player
+{
+    [RequireComponent(typeof(NavMeshAgent))]
+    public class playerUnit : MonoBehaviour
+    {
+        private NavMeshAgent navAgent;
+
+        private void OnEnable()
+        {
+            //grabing the navmesh
+            navAgent = GetComponent<NavMeshAgent>();
+        }
+
+
+        // function allows for the player and the AI to move its units to set destinations
+        public void MoveUnit(Vector3 _destination)
+        {
+            navAgent.isStopped = false; 
+            navAgent.SetDestination(_destination);
+        }
+    }
+}
+
