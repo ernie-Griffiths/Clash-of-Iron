@@ -1,0 +1,46 @@
+CheckEnageRange
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using AI.Eyes;
+public class CheckEngageRangeNode : Node
+{
+    private float range;
+    private float distance;
+    private Transform origin;
+
+    public CheckEngageRangeNode(float range, Transform origin)
+    {
+        this.range = range;
+     
+        this.origin = origin;
+    }
+
+    public override NodeState Evaluate()
+    {
+        distance = 100;
+        float ShortestDistance;
+        // finding the closest player unit from the player list.
+        foreach (GameObject PUnit in AI.Eyes.AIEYES.instanse.PlayerArmy)
+        {
+            // checks the closest unit is the current closest unit.
+            ShortestDistance = Vector3.Distance(PUnit.transform.position, origin.position);
+            if (ShortestDistance < distance)
+            {
+                distance = ShortestDistance;
+            }
+        }
+       
+        // checkcing the distance and then retuning succes if the distance is greater.
+        Debug.Log("Distance is " + distance + "range is " + range);
+        if (distance >= range)
+        {
+            Debug.Log("range node success");
+            return NodeState.Success;
+        }
+        else
+            Debug.Log("Range node Failure");
+        return NodeState.Failure;
+
+    }
+}
