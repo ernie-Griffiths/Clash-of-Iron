@@ -1,0 +1,48 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine.AI;
+using UnityEngine;
+using player;
+public class RetreatNode : Node
+{
+
+    private Transform target;
+    private GameObject Unit;
+  
+
+    public RetreatNode(Transform target, GameObject Unit)
+    {
+        this.Unit = Unit;
+        this.target = target;
+    }
+
+
+    public override NodeState Evaluate()
+    {
+
+  
+
+        // grabs a destination 5 units infront of the unit.
+        Debug.Log("Retreat node start");
+        Vector3 newDestination = target.transform.position;
+        newDestination = newDestination + (Vector3.forward * 5f);
+        Vector3 CurrentDestination = Unit.transform.position;
+        float distance = Vector3.Distance(newDestination, CurrentDestination);
+
+
+        playerUnit Units = Unit.gameObject.GetComponent<playerUnit>();
+
+        // if the unit is not near the desination point it will move it towards the unit.
+        if (distance > 1f)
+        {
+            Units.MoveUnit(newDestination);
+            Debug.Log("RetreatRunning");
+            return NodeState.Running;
+        }
+        //once the Enemy has stoped the node returns success.
+
+        return NodeState.Success;
+    }
+}
+
