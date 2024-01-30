@@ -1,0 +1,22 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[System.Serializable]
+public abstract class Node
+{
+
+    // creating a node class that has three states, Running, Success, Failure
+    protected NodeState _nodeState;
+    public NodeState NodeState { get { return _nodeState; } }
+
+    public abstract NodeState Evaluate();
+   
+}
+// node types
+public enum NodeState
+{
+    Running, Success, Failure
+}
+
