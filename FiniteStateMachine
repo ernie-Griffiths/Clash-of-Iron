@@ -1,0 +1,80 @@
+FiniteStateMachine
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+using Brain;
+
+namespace Assets.Scripts.FSM
+{
+    public class FiniteStateMachine : MonoBehaviour
+    {
+
+        AISBrain aiSBrain;
+        [SerializeField]
+        AbstractFSMState _currentState;
+
+        // creating a list of the valid states.
+        // these have been added in the inspector: Decision, Attack , defend and retreat state.
+        [SerializeField]
+        List<AbstractFSMState> _validStates;
+        Dictionary<FSMStateType, AbstractFSMState> _fsmStates;
+
+        public void Awake()
+        {
+            _currentState = null;
+
+            _fsmStates = new Dictionary<FSMStateType, AbstractFSMState>();
+            // adding the valid states to a dictionary of valid states
+            foreach(AbstractFSMState state in _validStates)
+            {
+                state.SetExecutingFSM(this);
+                _fsmStates.Add(state.StateType, state);
+            }
+        }
+
+        // entering the intital state that being the decision state.
+        public void Start()
+        {
+            EnterState(FSMStateType.DECISION);
+        }
+        public void Update()
+        {
+            if(_currentState != null)
+            {
+                _currentState.UpdateState();
+            }
+        }
+
+        // allowing it to enter the state,
+        public void EnterState(AbstractFSMState nextState)
+        {
+            if(nextState == null)
+            {
+                return;
+            }
+
+            if(_currentState != null)
+            {
+                _currentState.ExitState();
+            }
+            _currentState = nextState;
+            _currentState.EnterState();
+        }
+        // Allowing the state machine to be called and enter certain state types. 
+        public void EnterState(FSMStateType stateType)
+        {
+            if (_fsmStates.ContainsKey(stateType))
+            {
+                AbstractFSMState nextState = _fsmStates[stateType];
+
+                EnterState(nextState);
+            }
+        }
+
+    }
+}
+
