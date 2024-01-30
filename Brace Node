@@ -1,0 +1,106 @@
+
+using Brain;
+using player;
+using System.Collections;
+using System.Collections.Generic;
+using Units;
+using UnityEngine;
+using UnityEngine.AI;
+public class BraceNode : Node
+{
+    /// <summary>
+    /// brace needed a formation to be formed, this can now be a template for any aditional formations that would need to be created.
+    /// this has been dubbed brace with spearman in the front line with the soldier behind archers further back with cavalry following in the side.
+    /// </summary>
+    private Vector3 FormPoint;
+    private float FlSpacing;
+    private float ASpacing;
+    private float CSpacing;
+    private GameObject Unit;
+    private bool BraceTrue;
+
+    private string Name;
+    public BraceNode(GameObject Unit, float FlSpacing, float ASpacing, float CSpacing)
+    {
+        this.FlSpacing = FlSpacing;
+        this.ASpacing = ASpacing;
+        this.CSpacing = CSpacing;
+        this.Unit = Unit;
+    }
+
+
+    public override NodeState Evaluate()
+    {
+        // finding the formation point on the map.
+        GameObject FormPointGO = GameObject.Find("FormPoint");
+        FormPoint = FormPointGO.transform.position;
+
+        Unit.gameObject.GetComponent<playerUnit>();
+
+        Debug.Log(" brace node Form point is " + FormPoint);
+
+        Name = Unit.GetComponent<Unit_Script>().unitName;
+        playerUnit EUnits = Unit.gameObject.GetComponent<playerUnit>();
+        Debug.Log("Brace node entered");
+        Debug.Log(" brace node unit name is " + Name);
+        Debug.Log("Is not braced = " + EUnits.GetComponent<Unit_Script>().isNotBraced);
+        // this checks the unit type and if it is braced.
+        if (Name == "swordsman" || Name == "spearman" && EUnits.GetComponent<Unit_Script>().isNotBraced)
+        {
+            // finds a new formPosition based on the form point and the current spacing of the unit. And then moving it to its position
+            Vector3 FormPosition = FormPoint + (Vector3.right * (4f * FlSpacing));
+            Debug.Log("Form position is " + FormPosition);
+            EUnits.MoveUnit(FormPosition);
+
+            // checks the formationposition and its location, bracing it if it is close enough.
+            float distance = Vector3.Distance(FormPosition, Unit.transform.position);
+            Debug.Log("distance to FormPosition is " + distance);
+            if (distance < 1f)
+            {
+                // once the unit is braced it returns the unit as success.
+                EUnits.GetComponent<Unit_Script>().isNotBraced = false;
+                return NodeState.Success;
+            }
+
+        }
+        // this checks the unit type and if it is braced.
+        else if (Name == "archer" && EUnits.GetComponent<Unit_Script>().isNotBraced)
+        {
+            // finds a new formPosition based on the form point and the current spacing of the unit.  And then moving it to its position
+            Vector3 FormPosition = FormPoint + ((Vector3.forward * 3f) + (Vector3.right * (6f * ASpacing)));
+            Debug.Log("Form position is " + FormPosition);
+            EUnits.MoveUnit(FormPosition);
+
+            // checks the formationposition and its location, bracing it if it is close enough.
+            float distance = Vector3.Distance(FormPosition, Unit.transform.position);
+            Debug.Log("distance to FormPosition is " + distance);
+
+            if (distance < 1f)
+            {
+
+                EUnits.GetComponent<Unit_Script>().isNotBraced = false;
+                return NodeState.Success;
+            }
+        }
+        // this checks the unit type and if it is braced.
+        else if (Name == "cavalry" && EUnits.GetComponent<Unit_Script>().isNotBraced)
+        {
+            // finds a new formPosition based on the form point and the current spacing of the unit.  And then moving it to its position
+            Vector3 FormPosition = FormPoint + ((Vector3.forward * 8f) + (Vector3.left * (4f * CSpacing)));
+            Debug.Log("Form position is " + FormPosition);
+            EUnits.MoveUnit(FormPosition);
+
+            // checks the formationposition and its location, bracing it if it is close enough.
+            float distance = Vector3.Distance(FormPosition, Unit.transform.position);
+            Debug.Log("distance to FormPosition is " + distance);
+            if (distance < 1f)
+            {
+
+                EUnits.GetComponent<Unit_Script>().isNotBraced = false;
+                return NodeState.Success;
+            }
+        }
+        else return NodeState.Failure;
+
+        return NodeState.Running;
+    }
