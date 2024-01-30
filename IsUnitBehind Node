@@ -1,0 +1,45 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using AI.Eyes;
+using Units;
+
+public class IsUnitBehindNode : Node
+{
+    private string Name;
+    private Transform target;
+    private GameObject Unit;
+    private float DotDirection;
+    private Vector3 Direction;
+    public IsUnitBehindNode(GameObject Unit)
+    {
+        this.Unit = Unit;
+    }
+
+    public override NodeState Evaluate()
+    {
+        // finds the closest unit, this has been done so that if the cavalry ends up closer to a unit that is it not behind trying to get behind another unit it will then attempt to het behind that unit.
+        Debug.Log("Is unit behind node entered");
+        GameObject AIEyesGO = GameObject.Find("AI Brain");
+        AIEYES AIeyes = (AIEYES)AIEyesGO.GetComponent(typeof(AIEYES));
+        target = AIeyes.GetClosestPlayerUnit(Unit.transform);
+
+
+        // Calculating the dot product
+        Direction = (Unit.transform.position - target.transform.position).normalized;
+
+        DotDirection = Vector3.Dot(Direction, target.transform.forward);
+
+        // using the dotproduct to check if the unit is bheind.
+        Debug.Log("Dot Direction is " + DotDirection);
+        if (DotDirection <= -0.5)
+        {
+            Debug.Log("UnitBehind node success");
+            return NodeState.Success;
+        }
+        else
+            Debug.Log("UnitBheind node Failure");
+        return NodeState.Failure;
+    }
+}
