@@ -1,0 +1,88 @@
+MultiSelect
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace InputManager
+{
+    public static class MultiSelect
+    {
+        private static Texture2D _whiteTexture;
+
+        // setting a white texture for a selection box
+        public static Texture2D whiteTexure
+        {
+            get
+            {
+                if(_whiteTexture == null)
+                {
+                    _whiteTexture = new Texture2D(1, 1);
+                    //setting the colour of the box
+                    _whiteTexture.SetPixel(0, 0, Color.white);
+                    _whiteTexture.Apply();
+                }
+                return _whiteTexture;
+            }
+        }
+
+        // Can be called to draw a rectangle on the screen.
+        public static void DrawScreenRect(Rect rect, Color color)
+        {
+            GUI.color = color;
+            GUI.DrawTexture(rect, whiteTexure);
+        }
+
+        // this sets a outline of the rectangle making the selection box more clear.
+        public static void DrawScreenRectBorder(Rect rect, float thickness, Color color)
+        {
+            //Top
+            DrawScreenRect(new Rect(rect.xMin, rect.yMin, rect.width, thickness), color);
+            //Bottom
+            DrawScreenRect(new Rect(rect.xMin, rect.yMax - thickness, rect.width, thickness), color);
+            //Left
+            DrawScreenRect(new Rect(rect.xMin, rect.yMin, thickness, rect.height), color);
+            //Right
+            DrawScreenRect(new Rect(rect.xMax- thickness, rect.yMin, thickness, rect.height), color);
+        }
+
+
+
+        // setting the size of the rectangle using the screen positions.
+        public static Rect GetScreenRect(Vector3 screenPos1, Vector3 screenPos2)
+        {
+            //from bottom right to top left
+            screenPos1.y = Screen.height - screenPos1.y;
+            screenPos2.y = Screen.height - screenPos2.y;
+
+            // corners 
+            Vector3 BR = Vector3.Max(screenPos1, screenPos2);
+            Vector3 TL = Vector3.Min(screenPos1, screenPos2);
+
+            // create the rectangle
+            return Rect.MinMaxRect(TL.x, TL.y, BR.x, BR.y);
+        }
+
+
+        // this detects the bounds of the rectangle, which is later used to detect if an object is within the area of the rectangle for selecting units.
+        public static Bounds GetVPBounds(Camera cam, Vector3 screenPos1, Vector3 screenPos2)
+        {
+            Vector3 pos1 = cam.ScreenToViewportPoint(screenPos1);
+            Vector3 pos2 = cam.ScreenToViewportPoint(screenPos2);
+
+
+            Vector3 min = Vector3.Min(pos1, pos2);
+            Vector3 max = Vector3.Max(pos1, pos2);
+
+            min.z = cam.nearClipPlane;
+            max.z = cam.farClipPlane;
+
+            Bounds bounds = new Bounds();
+
+            bounds.SetMinMax(min, max);
+
+            return bounds;
+        }
+    }
+}
+
