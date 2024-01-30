@@ -1,0 +1,64 @@
+RetreatState
+
+using Brain;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using UnityEngine;
+
+namespace Assets.Scripts.FSM.States
+{
+
+    [CreateAssetMenu(fileName = "RetreatState", menuName = "FSM/States/Retreat", order = 4)]
+    public class RetreatState : AbstractFSMState
+    {
+    
+        public override void OnEnable()
+        {
+            base.OnEnable();
+            StateType = FSMStateType.RETREAT;
+        }
+
+        public override bool EnterState()
+        {
+            EnteredState = false;
+            if (base.EnterState())
+            {
+                // start function of entered state.
+                Debug.Log("Retreat State entered.");
+                EnteredState = true;
+               
+            }
+            return EnteredState;
+        }
+
+        public override void UpdateState()
+        {
+            // need to make sure we have entered the state
+
+            if (EnteredState)
+            {
+                Debug.Log("in Retreat state");
+
+                // running the Defend tree and then Analysing the armies.
+                Debug.Log("Running Retreat tree");
+                GameObject AIBrainATs = GameObject.Find("AI Brain");
+                AISBrain AIBrain = (AISBrain)AIBrainATs.GetComponent(typeof(AISBrain));
+                AIBrain.RunRetreatTree();
+                AIBrain.AnalyseArmies();
+                //once it has done this it will then enter the decision state
+                _fsm.EnterState(FSMStateType.DECISION);
+            }
+
+        }
+        public override bool ExitState()
+        {
+            base.ExitState();
+
+            Debug.Log("Exiting Retreat state");
+            return true;
+        }
+    }
+}
