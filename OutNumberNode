@@ -1,0 +1,58 @@
+
+
+using AI.Eyes;
+using System.Collections;
+using System.Collections.Generic;
+using Units;
+using UnityEngine;
+
+public class OutNumberNode : Node
+{
+    private int Friendsinrange;
+    private int Enemiesinrange;
+    private int OpertuneAttackRange;
+   
+    private GameObject Unit;
+    public OutNumberNode(GameObject Unit)
+    {
+        this.Unit = Unit;
+    }
+
+    public override NodeState Evaluate()
+    {
+        // sets amount of units in range to 0
+        Friendsinrange = 0;
+        Enemiesinrange = 0;
+
+        OpertuneAttackRange = 20;
+
+        // adds the amount of player units within a certain range to the current unit. to a Enemies in range.
+        foreach (GameObject PUnit in AI.Eyes.AIEYES.instanse.PlayerArmy)
+        {
+          if(OpertuneAttackRange > Vector3.Distance(Unit.transform.position, PUnit.transform.position))
+                {
+                Enemiesinrange++;
+            }
+        }
+
+        // adds the amount of player units within a certain range to the current unit. to a Enemies in range.
+        foreach (GameObject EUnit in AI.Eyes.AIEYES.instanse.EnemyArmy)
+        {
+            if (OpertuneAttackRange > Vector3.Distance(Unit.transform.position, EUnit.transform.position))
+                {
+                Friendsinrange++;
+            }
+        }
+
+        Debug.Log("Enemies in ranfe " + Enemiesinrange + " Freinds in range " + Friendsinrange);
+
+        // if there are less enemies than friends in range,  if so returns success.
+        if (Enemiesinrange < Friendsinrange) {
+
+            return NodeState.Success;
+        }
+
+        return NodeState.Failure;
+    }
+}
+
