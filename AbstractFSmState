@@ -1,0 +1,69 @@
+AbstractFSmState
+
+using Assets.Scripts.FSM;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public enum ExecutionState
+{
+    // types that can be used to decide when a particular state has completed its task.
+    NONE,
+    ACTIVE,
+    COMPLETED,
+    TERMINATED,
+}
+
+public enum FSMStateType
+{
+    // types of states the that the AI brain can be in.
+    DECISION,
+    ATTACK,
+    DEFEND,
+    RETREAT,
+};
+
+public abstract class AbstractFSMState : ScriptableObject
+{
+    protected FiniteStateMachine _fsm;
+
+    public ExecutionState ExecutionState { get; protected set; }
+    public FSMStateType StateType { get; protected set; }
+
+    public bool EnteredState { get; protected set; }
+
+    
+
+    /// <summary>
+    
+    // each of the functions below are what change the types of the state this is used to detect when a state has finished its action.
+   
+    public virtual void OnEnable()
+    {
+        ExecutionState = ExecutionState.NONE;
+    }
+    public virtual bool EnterState()
+    {
+        ExecutionState = ExecutionState.ACTIVE;
+        return true;
+    }
+
+    public abstract void UpdateState();
+
+    public virtual bool ExitState()
+    {
+        ExecutionState = ExecutionState.COMPLETED;
+        return true;
+    }
+    /// </summary>
+
+    public virtual void SetExecutingFSM(FiniteStateMachine fsm)
+    {
+        if(fsm != null)
+        {
+            _fsm = fsm;
+        }
+    }
+
+
+}
