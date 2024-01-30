@@ -1,0 +1,31 @@
+PlayerManager
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+using InputManager;
+
+namespace player
+{
+
+    public class PlayerManager : MonoBehaviour
+    {
+        public static PlayerManager instance;
+
+        // setting a transform for the parent units of the objects, so that the child of these objects can be called apon.
+        public Transform PlayerUnits;
+        public Transform EnemyUnits;
+        void Start()
+        {
+            instance = this;
+        }
+
+        // calling upon handle unit movement.
+        void Update()
+        {
+            InputHandler.instanse.HandleUnitMovement();
+        }
+    }
+}
+
