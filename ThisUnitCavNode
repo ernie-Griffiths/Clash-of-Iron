@@ -1,0 +1,30 @@
+
+
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ThisUnitCavNode : Node
+{
+    private string Name;
+    public ThisUnitCavNode(string Name)
+    {
+        this.Name = Name;
+    }
+
+    public override NodeState Evaluate()
+    {
+        // checks if the name of this unit is cavalry.
+        Debug.Log("This Unit Cav node entered");
+        if (Name == "cavalry") 
+        {
+            Debug.Log("This Unit Cav node success");
+            return NodeState.Success;
+        }
+        else
+            Debug.Log("This Unit Cav node Failure");
+        return NodeState.Failure;
+
+    }
+}
